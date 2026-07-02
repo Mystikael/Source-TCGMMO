@@ -7,7 +7,13 @@ using UnityEngine.Networking;
 namespace SourceTCG.Networking
 {
     [Serializable]
-    public class AuthResponse { public string token; public string playerId; }
+    public class AuthResponse { public string token; public string playerId; public string email; }
+
+    [Serializable]
+    public class EmailAuthRequest { public string email; public string password; }
+
+    [Serializable]
+    public class ApiErrorResponse { public string error; }
 
     [Serializable]
     public class WalletResponse
@@ -113,6 +119,60 @@ namespace SourceTCG.Networking
                 done?.Invoke(true);
             });
         }
+
+        public IEnumerator EmailSignup(string email, string password, Action<bool, string> done)
+        {
+            var body = JsonUtility.ToJson(new EmailAuthRequest { email = email, password = password });
+            yield return PostJson("/auth/signup", body, null, (ok, json) =>
+            {
+                if (!ok) { done?.Invoke(false, ParseApiError(json)); return; }
+                ApplyAuth(JsonUtility.FromJson<AuthResponse>(json));
+                done?.Invoke(true, null);
+            });
+        }
+
+        public IEnumerator EmailLogin(string email, string password, Action<bool, string> done)
+        {
+            var body = JsonUtility.ToJson(new EmailAuthRequest { email = email, password = password });
+            yield return PostJson("/auth/login", body, null, (ok, json) =>
+            {
+                if (!ok) { done?.Invoke(false, ParseApiError(json)); return; }
+                ApplyAuth(JsonUtility.FromJson<AuthResponse>(json));
+                done?.Invoke(true, null);
+            });
+        }
+
+        public void SetToken(string token) => Token = token;
+
+        void ApplyAuth(AuthResponse response)
+        {
+            Token = response.token;
+            if (!string.IsNullOrEmpty(response.email))
+                PlayerPrefs.SetString("source_email", response.email);
+            PlayerPrefs.SetString("source_token", response.token);
+            PlayerPrefs.Save();
+        }
+
+        static string ParseApiError(string json)
+        {
+            if (string.IsNullOrEmpty(json)) return "Request failed";
+            try
+            {
+                var err = JsonUtility.FromJson<ApiErrorResponse>(json);
+                if (!string.IsNullOrEmpty(err.error)) return FormatApiError(err.error);
+            }
+            catch { /* fall through */ }
+            return "Request failed";
+        }
+
+        static string FormatApiError(string code) => code switch
+        {
+            "invalid_email" => "Enter a valid email address.",
+            "weak_password" => "Password must be at least 8 characters.",
+            "email_taken" => "That email is already registered.",
+            "invalid_credentials" => "Incorrect email or password.",
+            _ => "Something went wrong. Try again.",
+        };
 
         public IEnumerator RefreshWallet(Action<bool> done = null)
         {

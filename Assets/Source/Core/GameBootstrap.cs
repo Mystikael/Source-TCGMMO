@@ -1,31 +1,15 @@
-using System.Collections;
-using SourceTCG.Networking;
+using SourceTCG.UI;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace SourceTCG.Core
 {
+    /// <summary>Legacy bootstrap hook — login flow is handled by LoginController.</summary>
     public class GameBootstrap : MonoBehaviour
     {
-        [SerializeField] SourceApiClient apiClient;
-        [SerializeField] string worldMapScene = "WorldMap";
-
-        IEnumerator Start()
+        void Awake()
         {
-            if (apiClient == null && SourceSession.Instance != null)
-                apiClient = SourceSession.Instance.Api;
-            if (apiClient == null)
-                apiClient = FindFirstObjectByType<SourceApiClient>();
-
-            var ok = false;
-            yield return apiClient.GuestAuth(b => ok = b);
-            if (!ok)
-            {
-                Debug.LogError("Guest auth failed");
-                yield break;
-            }
-            yield return apiClient.RefreshWallet();
-            SceneManager.LoadScene(worldMapScene);
+            if (GetComponent<LoginController>() == null)
+                gameObject.AddComponent<LoginController>();
         }
     }
 }

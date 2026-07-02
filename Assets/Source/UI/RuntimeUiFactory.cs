@@ -108,6 +108,58 @@ namespace SourceTCG.UI
             root.SetActive(false);
         }
 
+        public static InputField CreateInputField(Transform parent, string name, string placeholder, bool isPassword)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            var rect = go.AddComponent<RectTransform>();
+            rect.sizeDelta = new Vector2(320, 36);
+
+            var bg = go.AddComponent<Image>();
+            bg.color = new Color(0.12f, 0.14f, 0.2f, 0.95f);
+
+            var textGo = new GameObject("Text");
+            textGo.transform.SetParent(go.transform, false);
+            var textRect = textGo.AddComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = new Vector2(10, 4);
+            textRect.offsetMax = new Vector2(-10, -4);
+            var text = textGo.AddComponent<Text>();
+            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.fontSize = 16;
+            text.color = Color.white;
+            text.supportRichText = false;
+
+            var placeholderGo = new GameObject("Placeholder");
+            placeholderGo.transform.SetParent(go.transform, false);
+            var phRect = placeholderGo.AddComponent<RectTransform>();
+            phRect.anchorMin = Vector2.zero;
+            phRect.anchorMax = Vector2.one;
+            phRect.offsetMin = new Vector2(10, 4);
+            phRect.offsetMax = new Vector2(-10, -4);
+            var phText = placeholderGo.AddComponent<Text>();
+            phText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            phText.fontSize = 16;
+            phText.color = new Color(1f, 1f, 1f, 0.45f);
+            phText.text = placeholder;
+
+            var field = go.AddComponent<InputField>();
+            field.textComponent = text;
+            field.placeholder = phText;
+            field.lineType = InputField.LineType.SingleLine;
+            if (isPassword)
+            {
+                field.contentType = InputField.ContentType.Password;
+                field.asteriskChar = '*';
+            }
+            else
+            {
+                field.contentType = InputField.ContentType.EmailAddress;
+            }
+            return field;
+        }
+
         public static Button CreateButton(Transform parent, string label, Vector2 anchor, Vector2 size)
         {
             var go = new GameObject(label);

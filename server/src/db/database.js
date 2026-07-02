@@ -6,22 +6,46 @@ export function createDatabase(path = ':memory:') {
   const db = new Database(path);
   db.pragma('journal_mode = WAL');
   db.exec(SCHEMA_SQL);
+  migratePlayersAuthColumns(db);
   return db;
 }
 
+function migratePlayersAuthColumns(db) {
+  const cols = db.prepare('PRAGMA table_info(players)').all().map((c) => c.name);
+  if (!cols.includes('email')) db.exec('ALTER TABLE players ADD COLUMN email TEXT UNIQUE');
+  if (!cols.includes('password_hash')) db.exec('ALTER TABLE players ADD COLUMN password_hash TEXT');
+}
+
 export function createGuestPlayer(db) {
-  const id = uuid();
-  const token = uuid();
-  const today = new Date().toISOString().slice(0, 10);
-  db.prepare('INSERT INTO players (id, token) VALUES (?, ?)').run(id, token);
-  db.prepare(
-    'INSERT INTO player_wallet (player_id, source_points, extractions_today, extractions_reset_at) VALUES (?, 0, 0, ?)'
-  ).run(id, today);
-  return { id, token };
+  return createPlayerWithWallet(db);
 }
 
 export function getPlayerByToken(db, token) {
   return db.prepare('SELECT * FROM players WHERE token = ?').get(token);
+}
+
+export function getPlayerByEmail(db, email) {
+  return db.prepare('SELECT * FROM players WHERE email = ?').get(email);
+}
+
+function createPlayerWithWallet(db, { email = null, passwordHash = null } = {}) {
+  const id = uuid();
+  const token = uuid();
+  const today = new Date().toISOString().slice(0, 10);
+  db.prepare('INSERT INTO players (id, token, email, password_hash) VALUES (?, ?, ?, ?)').run(
+    id,
+    token,
+    email,
+    passwordHash
+  );
+  db.prepare(
+    'INSERT INTO player_wallet (player_id, source_points, extractions_today, extractions_reset_at) VALUES (?, 0, 0, ?)'
+  ).run(id, today);
+  return { id, token, email };
+}
+
+export function createEmailPlayer(db, email, passwordHash) {
+  return createPlayerWithWallet(db, { email, passwordHash });
 }
 
 export function resetWalletIfNeeded(db, playerId) {

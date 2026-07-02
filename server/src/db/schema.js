@@ -2,6 +2,8 @@ export const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS players (
   id TEXT PRIMARY KEY,
   token TEXT NOT NULL UNIQUE,
+  email TEXT UNIQUE,
+  password_hash TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

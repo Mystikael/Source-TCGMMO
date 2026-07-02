@@ -4,7 +4,7 @@ Set-Location $root
 $errors = @()
 $build = Get-Content "ProjectSettings\EditorBuildSettings.asset" -Raw
 $world = Get-Content "Assets\Source\UI\WorldMapController.cs" -Raw
-$bootstrap = Get-Content "Assets\Source\Core\GameBootstrap.cs" -Raw
+$login = Get-Content "Assets\Source\UI\LoginController.cs" -Raw
 $session = Get-Content "Assets\Source\Core\SourceSession.cs" -Raw
 
 foreach ($scene in @('Bootstrap', 'WorldMap', 'Inventory')) {
@@ -17,7 +17,8 @@ if ($world -notmatch 'BuildRuntimeUi') { $errors += 'WorldMap BuildRuntimeUi' }
 if ($world -notmatch 'MapPinVisualizer') { $errors += 'WorldMap pin visualizer' }
 if ($world -notmatch 'KiProgressBar') { $errors += 'WorldMap ki progress bar' }
 if ($world -notmatch 'pinVisualizer\?\.Refresh') { $errors += 'WorldMap pin refresh' }
-if ($bootstrap -notmatch 'GuestAuth') { $errors += 'Bootstrap auth flow' }
+if ($login -notmatch 'EmailLogin') { $errors += 'Bootstrap email login flow' }
+if ($login -notmatch 'EmailSignup') { $errors += 'Bootstrap email signup flow' }
 if ($session -notmatch 'RuntimeInitializeOnLoadMethod') { $errors += 'SourceSession auto init' }
 
 if ($errors.Count -gt 0) {

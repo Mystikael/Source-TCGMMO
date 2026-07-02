@@ -6,10 +6,13 @@ import { haversineMeters, isWithinRadiusMeters } from './economy/geo.js';
 import { rollExtractPoints, rollGatherOutcome, computeKiRequiredSeconds } from './economy/rng.js';
 import {
   createGuestPlayer,
+  createEmailPlayer,
+  getPlayerByEmail,
   getPlayerByToken,
   resetWalletIfNeeded,
   addInventory,
 } from './db/database.js';
+import { hashPassword, verifyPassword, isValidEmail, normalizeEmail } from './db/auth.js';
 import { latLngToH3, getNearbySpawns, ensureHexSpawns } from './world/spawns.js';
 
 export function createApp(db, options = {}) {
@@ -31,6 +34,27 @@ export function createApp(db, options = {}) {
   app.post('/auth/guest', (_req, res) => {
     const player = createGuestPlayer(db);
     res.json({ token: player.token, playerId: player.id });
+  });
+
+  app.post('/auth/signup', (req, res) => {
+    const email = normalizeEmail(req.body?.email ?? '');
+    const password = req.body?.password ?? '';
+    if (!isValidEmail(email)) return res.status(400).json({ error: 'invalid_email' });
+    if (typeof password !== 'string' || password.length < 8)
+      return res.status(400).json({ error: 'weak_password' });
+    if (getPlayerByEmail(db, email)) return res.status(409).json({ error: 'email_taken' });
+    const player = createEmailPlayer(db, email, hashPassword(password));
+    res.status(201).json({ token: player.token, playerId: player.id, email });
+  });
+
+  app.post('/auth/login', (req, res) => {
+    const email = normalizeEmail(req.body?.email ?? '');
+    const password = req.body?.password ?? '';
+    if (!isValidEmail(email)) return res.status(400).json({ error: 'invalid_email' });
+    const player = getPlayerByEmail(db, email);
+    if (!player || !player.password_hash || !verifyPassword(password, player.password_hash))
+      return res.status(401).json({ error: 'invalid_credentials' });
+    res.json({ token: player.token, playerId: player.id, email });
   });
 
   app.get('/player/wallet', auth, (req, res) => {

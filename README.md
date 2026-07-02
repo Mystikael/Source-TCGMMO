@@ -30,7 +30,8 @@ Server runs on `http://127.0.0.1:3847`. Set `KI_TIME_SCALE=3600` for compressed 
 1. Open project in Unity 6
 2. Menu: **Source TCG → Setup Alpha Scenes** (optional UI polish)
 3. Play **Bootstrap** scene (first in build settings)
-4. Uses `GpsSimulator` (SF default); tap Extract / Gather / Start Ki
+4. **Sign up** or **log in** with email + password (8+ characters)
+5. Uses `GpsSimulator` (SF default); tap Extract / Gather / Start Ki
 
 ### Build order
 Bootstrap → WorldMap → Inventory
