@@ -38,7 +38,8 @@ Bootstrap → WorldMap → Inventory
 ## Project Layout
 
 - `Assets/Source/` — Unity game code
-- `Assets/ki_affinities/` — 12 Ki affinity icons
+- `Assets/Source/Data/Catalog/` — 12 Ki affinity + 27 resource ScriptableObjects
+- `Assets/ki_affinities/` — 12 Ki affinity icon PNGs (referenced by affinity assets)
 - `server/` — Shared game server (SQLite alpha)
 - `tools/world-baker/` — Pilot hex geography (CA, TX, NY)
 

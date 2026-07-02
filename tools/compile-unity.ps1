@@ -41,12 +41,22 @@ $p1 = Invoke-UnityBatch 'SourceTCG.Editor.AlphaSceneSetup.BatchSetup' $setupLog
 Add-Content $compileLog "BatchSetup exit $($p1.ExitCode)"
 if ($p1.ExitCode -ne 0) { exit 1 }
 
+$catalogLog = Join-Path $scratch 'unity-catalog-bake.log'
+$pCatalog = Invoke-UnityBatch 'SourceTCG.Editor.CatalogAssetSetup.BakeCatalogAssets' $catalogLog
+Add-Content $compileLog "BakeCatalogAssets exit $($pCatalog.ExitCode)"
+if ($pCatalog.ExitCode -ne 0) { exit 1 }
+
 $verifyLog = Join-Path $scratch 'unity-verify.log'
 $pVerify = Invoke-UnityBatch 'SourceTCG.Editor.AlphaSceneSetup.VerifyAlphaScenes' $verifyLog
 Add-Content $compileLog "VerifyAlphaScenes exit $($pVerify.ExitCode)"
 if ($pVerify.ExitCode -ne 0) { exit 1 }
 
-foreach ($log in @($setupLog, $verifyLog)) {
+$catalogVerifyLog = Join-Path $scratch 'unity-catalog-verify.log'
+$pCatalogVerify = Invoke-UnityBatch 'SourceTCG.Editor.CatalogAssetSetup.VerifyCatalogAssets' $catalogVerifyLog
+Add-Content $compileLog "VerifyCatalogAssets exit $($pCatalogVerify.ExitCode)"
+if ($pCatalogVerify.ExitCode -ne 0) { exit 1 }
+
+foreach ($log in @($setupLog, $catalogLog, $verifyLog, $catalogVerifyLog)) {
     if (Test-Path $log) {
         $bad = Select-String -Path $log -Pattern 'does not have a valid GUID' -SimpleMatch
         if ($bad) {
