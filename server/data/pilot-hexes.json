@@ -1,0 +1,82 @@
+[
+  {
+    "h3_index": "89283082803ffff",
+    "zone_class": "urban",
+    "max_resource_tier": 1,
+    "area_modifier": 1,
+    "poi_tags": "[\"urban_dense\"]",
+    "state_code": "CA"
+  },
+  {
+    "h3_index": "89283095bd3ffff",
+    "zone_class": "city_park",
+    "max_resource_tier": 3,
+    "area_modifier": 1.1,
+    "poi_tags": "[\"park\",\"forest\"]",
+    "state_code": "CA"
+  },
+  {
+    "h3_index": "8929ab6d8cfffff",
+    "zone_class": "national_park",
+    "max_resource_tier": 8,
+    "area_modifier": 1.3,
+    "poi_tags": "[\"mountain\",\"forest\"]",
+    "state_code": "CA"
+  },
+  {
+    "h3_index": "8929a19aa2bffff",
+    "zone_class": "beach",
+    "max_resource_tier": 3,
+    "area_modifier": 1.5,
+    "poi_tags": "[\"coast\",\"water\"]",
+    "state_code": "CA"
+  },
+  {
+    "h3_index": "89489e34677ffff",
+    "zone_class": "urban",
+    "max_resource_tier": 1,
+    "area_modifier": 1,
+    "poi_tags": "[\"urban_dense\"]",
+    "state_code": "TX"
+  },
+  {
+    "h3_index": "89489e34093ffff",
+    "zone_class": "city_park",
+    "max_resource_tier": 3,
+    "area_modifier": 1.1,
+    "poi_tags": "[\"park\"]",
+    "state_code": "TX"
+  },
+  {
+    "h3_index": "8948ab76613ffff",
+    "zone_class": "state_park",
+    "max_resource_tier": 5,
+    "area_modifier": 1.2,
+    "poi_tags": "[\"mountain\",\"desert\"]",
+    "state_code": "TX"
+  },
+  {
+    "h3_index": "892a1072893ffff",
+    "zone_class": "urban",
+    "max_resource_tier": 1,
+    "area_modifier": 1,
+    "poi_tags": "[\"urban_dense\"]",
+    "state_code": "NY"
+  },
+  {
+    "h3_index": "892a1008957ffff",
+    "zone_class": "city_park",
+    "max_resource_tier": 3,
+    "area_modifier": 1.1,
+    "poi_tags": "[\"park\",\"garden\"]",
+    "state_code": "NY"
+  },
+  {
+    "h3_index": "892b8c76d83ffff",
+    "zone_class": "state_park",
+    "max_resource_tier": 5,
+    "area_modifier": 1.25,
+    "poi_tags": "[\"forest\",\"mountain\"]",
+    "state_code": "NY"
+  }
+]
