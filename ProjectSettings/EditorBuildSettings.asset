@@ -7,13 +7,13 @@ EditorBuildSettings:
   m_Scenes:
   - enabled: 1
     path: Assets/Scenes/Bootstrap.unity
-    guid: 7a4e2f9c8b1d4630e5a69738291c4d01
+    guid: 8910f0aab7211cd4fa3a0b8b721f054f
   - enabled: 1
     path: Assets/Scenes/WorldMap.unity
-    guid: 833e5e8b8a5ae36488b226bddb7ccd27
+    guid: 27a7779f63ed45b43ab539a5644939d5
   - enabled: 1
     path: Assets/Scenes/Inventory.unity
-    guid: 06718d40360bc4649ac56833d6a5c9e6
+    guid: b2387dab8161e3947aaa497033f7e85b
   m_configObjects:
     UnityEditor.XR.ARCore.ARCoreSettings: {fileID: 11400000, guid: 6ee72d15cf39dd748a13eac57397b9af, type: 2}
     UnityEditor.XR.ARKit.ARKitSettings: {fileID: 11400000, guid: 0465d33c6aee55f44b0237db8b0e0259, type: 2}

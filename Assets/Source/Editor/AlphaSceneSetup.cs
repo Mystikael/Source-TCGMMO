@@ -1,5 +1,9 @@
 #if UNITY_EDITOR
+using System;
+using System.IO;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 using SourceTCG.Core;
 using SourceTCG.UI;
 using UnityEditor;
@@ -28,9 +32,113 @@ namespace SourceTCG.Editor
                 "Assets/Scenes/WorldMap.unity",
                 "Assets/Scenes/Inventory.unity",
             };
-            EditorBuildSettings.scenes = scenes.Select(s => new EditorBuildSettingsScene(s, true)).ToArray();
+            SyncBuildSettings(scenes);
             AssetDatabase.SaveAssets();
             Debug.Log("Alpha scenes created and added to build settings.");
+        }
+
+        [MenuItem("Source TCG/Verify Alpha Scenes")]
+        public static void VerifyMenu() => VerifyAlphaScenes();
+
+        /// <summary>Callable from Unity -batchmode -executeMethod SourceTCG.Editor.AlphaSceneSetup.VerifyAlphaScenes</summary>
+        public static void VerifyAlphaScenes()
+        {
+            try
+            {
+                var scenePaths = new[]
+                {
+                    "Assets/Scenes/Bootstrap.unity",
+                    "Assets/Scenes/WorldMap.unity",
+                    "Assets/Scenes/Inventory.unity",
+                };
+                foreach (var path in scenePaths)
+                    AssertSceneBuildWiring(path);
+
+                AssertWorldMapRuntimeWiring();
+                Debug.Log("VerifyAlphaScenes PASS");
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"VerifyAlphaScenes FAIL: {ex.Message}");
+                EditorApplication.Exit(1);
+            }
+        }
+
+        static void SyncBuildSettings(string[] scenePaths)
+        {
+            AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+            EditorBuildSettings.scenes = scenePaths
+                .Select(path => new EditorBuildSettingsScene(path, true))
+                .ToArray();
+
+            var buildSettingsPath = Path.GetFullPath(Path.Combine(Application.dataPath, "../ProjectSettings/EditorBuildSettings.asset"));
+            var existing = File.ReadAllText(buildSettingsPath);
+            var configIndex = existing.IndexOf("  m_configObjects:", StringComparison.Ordinal);
+            var configBlock = configIndex >= 0 ? existing.Substring(configIndex).TrimEnd() : "  m_configObjects: {}";
+
+            var sb = new StringBuilder();
+            sb.AppendLine("%YAML 1.1");
+            sb.AppendLine("%TAG !u! tag:unity3d.com,2011:");
+            sb.AppendLine("--- !u!1045 &1");
+            sb.AppendLine("EditorBuildSettings:");
+            sb.AppendLine("  m_ObjectHideFlags: 0");
+            sb.AppendLine("  serializedVersion: 2");
+            sb.AppendLine("  m_Scenes:");
+            foreach (var path in scenePaths)
+            {
+                var guid = AssetDatabase.AssetPathToGUID(path);
+                if (guid.Length != 32 || !Regex.IsMatch(guid, "^[a-f0-9]{32}$"))
+                    throw new InvalidOperationException($"Cannot sync build settings; invalid GUID for {path}: '{guid}'");
+                sb.AppendLine("  - enabled: 1");
+                sb.AppendLine($"    path: {path}");
+                sb.AppendLine($"    guid: {guid}");
+            }
+            sb.AppendLine(configBlock);
+            File.WriteAllText(buildSettingsPath, sb.ToString(), new UTF8Encoding(false));
+            AssetDatabase.Refresh();
+        }
+
+        static void AssertSceneBuildWiring(string path)
+        {
+            var guid = AssetDatabase.AssetPathToGUID(path);
+            if (string.IsNullOrEmpty(guid) || guid.Length != 32 || !Regex.IsMatch(guid, "^[a-f0-9]{32}$"))
+                throw new InvalidOperationException($"Invalid AssetDatabase GUID for {path}: '{guid}'");
+
+            var buildEntry = EditorBuildSettings.scenes.FirstOrDefault(s => s.path == path);
+            if (buildEntry.path != path || !buildEntry.enabled)
+                throw new InvalidOperationException($"Build settings missing or disabled scene: {path}");
+            if (buildEntry.guid.ToString() != guid)
+                throw new InvalidOperationException(
+                    $"Build GUID mismatch for {path}: build={buildEntry.guid} meta={guid}");
+        }
+
+        static void AssertWorldMapRuntimeWiring()
+        {
+            var scene = EditorSceneManager.OpenScene("Assets/Scenes/WorldMap.unity", OpenSceneMode.Single);
+            try
+            {
+                var ctrl = UnityEngine.Object.FindFirstObjectByType<WorldMapController>();
+                var pins = UnityEngine.Object.FindFirstObjectByType<MapPinVisualizer>();
+                var progress = UnityEngine.Object.FindFirstObjectByType<KiProgressBar>();
+                if (ctrl == null || pins == null || progress == null)
+                    throw new InvalidOperationException("WorldMap missing WorldMapController, MapPinVisualizer, or KiProgressBar");
+
+                var so = new SerializedObject(ctrl);
+                if (so.FindProperty("pinVisualizer").objectReferenceValue != pins)
+                    throw new InvalidOperationException("WorldMapController.pinVisualizer not wired to MapPinVisualizer");
+                if (so.FindProperty("kiProgressBar").objectReferenceValue != progress)
+                    throw new InvalidOperationException("WorldMapController.kiProgressBar not wired to KiProgressBar");
+                if (so.FindProperty("hudText").objectReferenceValue == null)
+                    throw new InvalidOperationException("WorldMapController.hudText is not assigned");
+                if (UnityEngine.Object.FindFirstObjectByType<EventSystem>() == null)
+                    throw new InvalidOperationException("WorldMap missing EventSystem");
+                if (GameObject.Find("Canvas") == null || GameObject.Find("PinPanel") == null)
+                    throw new InvalidOperationException("WorldMap missing Canvas or PinPanel");
+            }
+            finally
+            {
+                EditorSceneManager.CloseScene(scene, true);
+            }
         }
 
         static void CreateBootstrapScene()
@@ -95,7 +203,7 @@ namespace SourceTCG.Editor
 
         static void EnsureEventSystem()
         {
-            if (Object.FindFirstObjectByType<EventSystem>() == null)
+            if (UnityEngine.Object.FindFirstObjectByType<EventSystem>() == null)
             {
                 var es = new GameObject("EventSystem");
                 es.AddComponent<EventSystem>();
