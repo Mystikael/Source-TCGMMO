@@ -50,7 +50,8 @@ namespace SourceTCG.Tests
         public void GetAffinityName_ReturnsCorrectName()
         {
             Assert.AreEqual("Watyr", GameCatalog.GetAffinityName("watyr"));
-            Assert.AreEqual("watyr", GameCatalog.GetAffinityName("watyr"));
+            Assert.AreEqual("Fyr", GameCatalog.GetAffinityName("fyr"));
+            Assert.AreEqual("unknown_xyz", GameCatalog.GetAffinityName("unknown_xyz"));
         }
 
         [Test]

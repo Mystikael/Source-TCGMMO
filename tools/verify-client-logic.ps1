@@ -34,5 +34,17 @@ if ($errors.Count -gt 0) {
     Write-Output "FAIL: $($errors -join ', ')"
     exit 1
 }
-Write-Output 'PASS: client logic constants, catalog structure, runtime UI wiring verified'
+# Run real NUnit tests against shipped .cs files (not regex-only)
+$dotnetTest = dotnet test tests/ClientLogicTests/ClientLogic.Tests.csproj --no-restore 2>&1
+if ($LASTEXITCODE -ne 0) {
+    # first run may need restore
+    $dotnetTest = dotnet test tests/ClientLogicTests/ClientLogic.Tests.csproj 2>&1
+}
+$dotnetTest | ForEach-Object { Write-Output $_ }
+if ($LASTEXITCODE -ne 0) {
+    Write-Output 'FAIL: dotnet NUnit client logic tests'
+    exit 1
+}
+
+Write-Output 'PASS: client logic constants, catalog structure, runtime UI wiring, NUnit tests verified'
 exit 0
