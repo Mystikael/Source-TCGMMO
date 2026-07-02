@@ -19,6 +19,11 @@ namespace SourceTCG.Data
 
     public static class GameCatalog
     {
+        public const int AffinityCount = 12;
+        public const int ResourceCount = 27;
+        public const int TierMin = 0;
+        public const int TierMax = 8;
+
         public static readonly IReadOnlyList<KiAffinityDef> Affinities = new[]
         {
             new KiAffinityDef { Id = "fyr", Name = "Fyr", IconFile = "Fyr.png" },
@@ -51,6 +56,16 @@ namespace SourceTCG.Data
                 list.Add(new ResourceDef { Id = $"flora_t{tier}", Tier = tier, Category = "flora", Name = Flora[tier] });
             }
             return list;
+        }
+
+        public static string GetAffinityName(string affinityId)
+        {
+            if (string.IsNullOrEmpty(affinityId)) return "Ki";
+            foreach (var aff in Affinities)
+            {
+                if (aff.Id == affinityId) return aff.Name;
+            }
+            return affinityId;
         }
     }
 }

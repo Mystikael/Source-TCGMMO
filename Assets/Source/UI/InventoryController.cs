@@ -17,6 +17,13 @@ namespace SourceTCG.UI
 
         void Awake()
         {
+            if (inventoryText == null)
+            {
+                RuntimeUiFactory.EnsureEventSystem();
+                var canvas = RuntimeUiFactory.EnsureCanvas();
+                inventoryText = RuntimeUiFactory.CreateText(canvas.transform, "InventoryText", new Vector2(0, 0.1f), new Vector2(1, 1));
+                backButton = RuntimeUiFactory.CreateButton(canvas.transform, "Back", new Vector2(0.02f, 0.02f), new Vector2(120, 36));
+            }
             backButton?.onClick.AddListener(() => SceneManager.LoadScene("WorldMap"));
         }
 

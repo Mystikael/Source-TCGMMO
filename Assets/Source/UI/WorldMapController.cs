@@ -17,6 +17,8 @@ namespace SourceTCG.UI
         [SerializeField] Text hudText;
         [SerializeField] Text logText;
         [SerializeField] Button extractButton;
+        [SerializeField] Button gatherButton;
+        [SerializeField] Button kiButton;
         [SerializeField] Button inventoryButton;
         [SerializeField] float refreshInterval = 3f;
 
@@ -29,7 +31,31 @@ namespace SourceTCG.UI
             if (gps == null && SourceSession.Instance != null) gps = SourceSession.Instance.Gps;
             if (api == null) api = FindFirstObjectByType<SourceApiClient>();
             if (gps == null) gps = FindFirstObjectByType<GpsSimulator>();
+
+            if (hudText == null)
+                BuildRuntimeUi();
+
+            WireButtons();
+        }
+
+        void BuildRuntimeUi()
+        {
+            RuntimeUiFactory.EnsureEventSystem();
+            var canvas = RuntimeUiFactory.EnsureCanvas();
+            hudText = RuntimeUiFactory.CreateText(canvas.transform, "HUD", new Vector2(0, 0), new Vector2(1, 0.55f));
+            logText = RuntimeUiFactory.CreateText(canvas.transform, "Log", new Vector2(0, 0.55f), new Vector2(1, 1), 14);
+            extractButton = RuntimeUiFactory.CreateButton(canvas.transform, "Extract", new Vector2(0.02f, 0.02f), new Vector2(140, 36));
+            gatherButton = RuntimeUiFactory.CreateButton(canvas.transform, "Gather (250)", new Vector2(0.22f, 0.02f), new Vector2(160, 36));
+            kiButton = RuntimeUiFactory.CreateButton(canvas.transform, "Start Ki (100)", new Vector2(0.46f, 0.02f), new Vector2(160, 36));
+            inventoryButton = RuntimeUiFactory.CreateButton(canvas.transform, "Inventory", new Vector2(0.7f, 0.02f), new Vector2(140, 36));
+            log.Insert(0, OnboardingCopy.Welcome + "\n");
+        }
+
+        void WireButtons()
+        {
             extractButton?.onClick.AddListener(OnExtract);
+            gatherButton?.onClick.AddListener(OnGatherNearestResource);
+            kiButton?.onClick.AddListener(OnStartKi);
             inventoryButton?.onClick.AddListener(() => SceneManager.LoadScene("Inventory"));
         }
 
@@ -54,7 +80,7 @@ namespace SourceTCG.UI
             var w = api.Wallet;
             var hex = api.CurrentHex;
             var sb = new StringBuilder();
-            sb.AppendLine($"Source TCGMMO — World Map");
+            sb.AppendLine("Source TCGMMO — World Map");
             sb.AppendLine($"GPS: {lat:F4}, {lng:F4}");
             sb.AppendLine($"Hex: {hex?.h3Index ?? "?"} ({hex?.zoneClass})");
             sb.AppendLine($"Source Points: {w?.sourcePoints ?? 0}");
@@ -73,10 +99,7 @@ namespace SourceTCG.UI
                 extractButton.interactable = hex != null && hex.canExtract;
         }
 
-        void OnExtract()
-        {
-            StartCoroutine(DoExtract());
-        }
+        void OnExtract() => StartCoroutine(DoExtract());
 
         IEnumerator DoExtract()
         {
@@ -90,10 +113,7 @@ namespace SourceTCG.UI
             RefreshHud(gps.Latitude, gps.Longitude);
         }
 
-        public void OnGatherNearestResource()
-        {
-            StartCoroutine(DoGather());
-        }
+        public void OnGatherNearestResource() => StartCoroutine(DoGather());
 
         IEnumerator DoGather()
         {
@@ -122,10 +142,7 @@ namespace SourceTCG.UI
             yield return api.RefreshNearby(gps.Latitude, gps.Longitude);
         }
 
-        public void OnStartKi()
-        {
-            StartCoroutine(DoKi());
-        }
+        public void OnStartKi() => StartCoroutine(DoKi());
 
         IEnumerator DoKi()
         {
@@ -148,11 +165,11 @@ namespace SourceTCG.UI
             yield return api.StartKi(target.id, gps.Latitude, gps.Longitude, r => start = r);
             if (start == null) { AppendLog("Ki start failed."); yield break; }
             activeKi = start;
-            AppendLog($"Ki session started: {start.affinityId} ({start.requiredSeconds}s)");
-            StartCoroutine(KiPingLoop(start.sessionId));
+            AppendLog($"Ki session started: {GameCatalog.GetAffinityName(start.affinityId)} ({start.requiredSeconds}s)");
+            StartCoroutine(KiPingLoop(start.sessionId, start.affinityId));
         }
 
-        IEnumerator KiPingLoop(string sessionId)
+        IEnumerator KiPingLoop(string sessionId, string affinityId)
         {
             while (activeKi != null && activeKi.state != "completed")
             {
@@ -163,7 +180,8 @@ namespace SourceTCG.UI
                 activeKi = ping;
                 if (ping.state == "completed")
                 {
-                    AppendLog($"Ki complete! +{ping.kiAwarded} {GameCatalog.Affinities[0].Name} tier Ki");
+                    var name = GameCatalog.GetAffinityName(affinityId);
+                    AppendLog($"Ki complete! +{ping.kiAwarded} {name}");
                     yield return api.RefreshWallet();
                 }
             }

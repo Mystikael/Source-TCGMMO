@@ -37,13 +37,20 @@ namespace SourceTCG.Tests
         [Test]
         public void GameCatalog_Has12Affinities()
         {
-            Assert.AreEqual(12, GameCatalog.Affinities.Count);
+            Assert.AreEqual(GameCatalog.AffinityCount, GameCatalog.Affinities.Count);
         }
 
         [Test]
         public void GameCatalog_Has27Resources()
         {
-            Assert.AreEqual(27, GameCatalog.Resources.Count);
+            Assert.AreEqual(GameCatalog.ResourceCount, GameCatalog.Resources.Count);
+        }
+
+        [Test]
+        public void GetAffinityName_ReturnsCorrectName()
+        {
+            Assert.AreEqual("Watyr", GameCatalog.GetAffinityName("watyr"));
+            Assert.AreEqual("watyr", GameCatalog.GetAffinityName("watyr"));
         }
 
         [Test]
