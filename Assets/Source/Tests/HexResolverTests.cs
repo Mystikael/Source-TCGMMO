@@ -1,4 +1,3 @@
-#if UNITY_INCLUDE_TESTS
 using NUnit.Framework;
 using SourceTCG.Core;
 
@@ -23,4 +22,3 @@ namespace SourceTCG.Tests
         }
     }
 }
-#endif

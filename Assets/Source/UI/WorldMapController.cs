@@ -35,11 +35,14 @@ namespace SourceTCG.UI
             if (api == null) api = FindFirstObjectByType<SourceApiClient>();
             if (gps == null) gps = FindFirstObjectByType<GpsSimulator>();
 
-            if (hudText == null || pinVisualizer == null || kiProgressBar == null)
+            if (NeedsRuntimeUi())
                 BuildRuntimeUi();
 
             WireButtons();
         }
+
+        bool NeedsRuntimeUi() =>
+            hudText == null || extractButton == null || pinVisualizer == null || kiProgressBar == null;
 
         void BuildRuntimeUi()
         {

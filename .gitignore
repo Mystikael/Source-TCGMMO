@@ -27,3 +27,7 @@ server/data/*.db-*
 tests/ClientLogicTests/bin/
 tests/ClientLogicTests/obj/
 !tests/ClientLogicTests/ClientLogic.Tests.csproj
+
+# agent harness artifacts
+mcps/
+terminals/

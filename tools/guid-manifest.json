@@ -1,0 +1,23 @@
+﻿{
+    "Assets\\Source\\Core\\HexResolver.cs":  "f70249c2317c4940ae1b2b473c6b3b3b",
+    "Assets\\Source\\Debug\\GpsSimulator.cs":  "6652802d3ea445c59fb14157d3f024a0",
+    "Assets\\Source\\UI\\MapPinVisualizer.cs":  "4db65f34dd0d4fc99bd709fcf727ce1f",
+    "Assets\\Source\\Core\\GameBootstrap.cs":  "00d531a21ba145edb30cad49d15caccf",
+    "Assets\\Source\\Core\\EconomyConfig.cs":  "6ec6a686f4ca429a96078742e8e99e5b",
+    "Assets\\Source\\UI\\InventoryController.cs":  "d97ce13a3162498dbd14fc9ab37345ff",
+    "Assets\\Source\\Tests\\HudFormatterTests.cs":  "eba6f45e79af4f92864ec76828a0e8ba",
+    "Assets\\Source\\UI\\WorldMapHudFormatter.cs":  "2da63c019f034fed9629892339332fbe",
+    "Assets\\Source\\Tests\\HexResolverTests.cs":  "1e1fb8094a1e43dcad95232b4f91304f",
+    "Assets\\Plugins\\H3\\NetTopologySuite.dll":  "10e409623b6c4700871c0fc4e2175654",
+    "Assets\\Source\\Networking\\SourceApiClient.cs":  "1efe1ad857d449218a70c7d17426efbe",
+    "Assets\\Source\\UI\\KiProgressBar.cs":  "c7796c1342f74a58a215bf007c5f056d",
+    "Assets\\Source\\Core\\Haversine.cs":  "e3a50e2b9974472d86d5c36a98c49e39",
+    "Assets\\Source\\Editor\\AlphaSceneSetup.cs":  "0b64e20fce304dbba002d55e366c0d95",
+    "Assets\\Source\\UI\\OnboardingCopy.cs":  "ba87c6a9627848be8a52994ae60e6f19",
+    "Assets\\Source\\UI\\RuntimeUiFactory.cs":  "11dbbce0acde48d4b8c61ed56ee6a018",
+    "Assets\\Source\\Tests\\EconomyTests.cs":  "950a1635940c42a784ddbc0ca7b58ae1",
+    "Assets\\Source\\Data\\GameCatalog.cs":  "3a6ddcd42be3410a9def919fe19bba2a",
+    "Assets\\Plugins\\H3\\pocketken.H3.dll":  "09bc5b143c8f46baa73e4388aace3cac",
+    "Assets\\Source\\Core\\SourceSession.cs":  "911e26ec7db342f7b9a6ce951f18f649",
+    "Assets\\Source\\UI\\WorldMapController.cs":  "5a8a25d00eb743418867795f429d8e92"
+}

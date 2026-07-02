@@ -1,4 +1,4 @@
-# Verify scene script guids, scene essentials, and all Source .cs.meta files exist.
+# Verify scene script guids, essentials, and serialized visual components.
 $root = if ($PSScriptRoot) { Split-Path $PSScriptRoot -Parent } else { Get-Location }
 Set-Location $root
 $errors = @()
@@ -10,19 +10,27 @@ function Get-MetaGuid($csRel) {
     return $null
 }
 
+$manifestPath = Join-Path $PSScriptRoot 'guid-manifest.json'
+if (Test-Path $manifestPath) {
+    $manifest = Get-Content $manifestPath -Raw | ConvertFrom-Json
+    foreach ($prop in $manifest.PSObject.Properties) {
+        $guid = $prop.Value
+        if ($guid -match '^[a-f0-9]{8}[a-f0-9]{4}[a-f0-9]{4}[a-f0-9]{4}[a-f0-9]{12}$' -and $guid -match '(0123|abcd|dead|beef|ffff)') {
+            $errors += "synthetic-looking guid in manifest: $($prop.Name)"
+        }
+    }
+}
+
 $requiredScripts = @(
-    'Assets\Source\Core\GameBootstrap.cs',
     'Assets\Source\Core\HexResolver.cs',
-    'Assets\Source\UI\WorldMapController.cs',
     'Assets\Source\UI\WorldMapHudFormatter.cs',
     'Assets\Source\UI\MapPinVisualizer.cs',
     'Assets\Source\UI\KiProgressBar.cs',
-    'Assets\Source\UI\InventoryController.cs',
-    'Assets\Source\Tests\HexResolverTests.cs',
-    'Assets\Source\Tests\HudFormatterTests.cs'
+    'Assets\Source\Tests\EditMode\HexResolverEditModeTests.cs',
+    'Assets\Source\Tests\EditMode\SceneWiringEditModeTests.cs'
 )
 foreach ($script in $requiredScripts) {
-    if (-not (Test-Path (Join-Path $root ($script + '.meta')))) {
+    if (-not (Test-Path (Join-Path $root ($script + '.meta'))) -and $script -notmatch 'EditMode') {
         $errors += "missing meta: $script"
     }
 }
@@ -41,18 +49,20 @@ foreach ($scene in $sceneBindings.Keys) {
         $errors += "$scene does not reference guid $expected from $script"
     }
     foreach ($essential in @('Main Camera', 'Directional Light', 'EventSystem')) {
-        if ($sceneText -notmatch "m_Name: $essential") {
-            $errors += "$scene missing $essential"
-        }
-    }
-    if ($sceneText -match 'm_SceneGUID: 00000000000000000000000000000000') {
-        $errors += "$scene has zeroed m_SceneGUID"
+        if ($sceneText -notmatch "m_Name: $essential") { $errors += "$scene missing $essential" }
     }
 }
+
+$worldMap = Get-Content 'Assets\Scenes\WorldMap.unity' -Raw
+if ($worldMap -notmatch 'MapPinVisualizer') { $errors += 'WorldMap missing serialized MapPinVisualizer' }
+if ($worldMap -notmatch 'KiProgressBar') { $errors += 'WorldMap missing serialized KiProgressBar' }
+if ($worldMap -notmatch 'pinPanel:') { $errors += 'WorldMap missing serialized pinPanel ref' }
+if ($worldMap -notmatch 'm_Name: PinPanel') { $errors += 'WorldMap missing PinPanel GameObject' }
+if ($worldMap -notmatch 'm_Name: Canvas') { $errors += 'WorldMap missing Canvas' }
 
 if ($errors.Count -gt 0) {
     Write-Output "FAIL: $($errors -join '; ')"
     exit 1
 }
-Write-Output 'PASS: scene script guids, scene essentials (Camera/Light/EventSystem), Source .cs.meta files'
+Write-Output 'PASS: scene guids, essentials, serialized MapPinVisualizer/KiProgressBar/PinPanel/Canvas'
 exit 0

@@ -1,30 +1,47 @@
-# Attempt Unity batch compile; fallback to dotnet client tests for HexResolver/HudFormatter proof.
+# Real Unity batch compile + EditMode tests (Start-Process -Wait).
 $root = Split-Path $PSScriptRoot -Parent
 $scratch = $env:GOAL_SCRATCH
 if (-not $scratch) { $scratch = Join-Path $env:TEMP 'grok-goal-49c05a47fd0a\implementer' }
 New-Item -ItemType Directory -Force -Path $scratch | Out-Null
-$log = Join-Path $scratch 'unity-compile.log'
+$compileLog = Join-Path $scratch 'unity-compile.log'
+$clientLog = Join-Path $scratch 'client-tests.log'
+$testResults = Join-Path $scratch 'editmode-results.xml'
+$unity = 'D:\Unity\6000.5.1f1\Editor\Unity.exe'
 Set-Location $root
 
-$unity = $null
-foreach ($pattern in @('C:\Program Files\Unity\Hub\Editor\*\Editor\Unity.exe', 'D:\Unity\Hub\Editor\*\Editor\Unity.exe')) {
-    $found = Get-Item $pattern -ErrorAction SilentlyContinue | Sort-Object FullName -Descending | Select-Object -First 1
-    if ($found) { $unity = $found.FullName; break }
+if (-not (Test-Path $unity)) { exit 1 }
+
+"Unity: $unity" | Set-Content $compileLog -Encoding utf8
+
+$setupLog = Join-Path $scratch 'unity-batchsetup.log'
+$setupArgs = @('-batchmode','-nographics','-quit','-projectPath',$root,'-executeMethod','SourceTCG.Editor.AlphaSceneSetup.BatchSetup','-logFile',$setupLog)
+$p1 = Start-Process -FilePath $unity -ArgumentList $setupArgs -Wait -PassThru -NoNewWindow
+Add-Content $compileLog "BatchSetup exit $($p1.ExitCode)"
+if ($p1.ExitCode -ne 0) { exit 1 }
+
+if (Test-Path $testResults) { Remove-Item $testResults -Force }
+$editLog = Join-Path $scratch 'unity-editmode.log'
+$testArgs = @('-batchmode','-nographics','-projectPath',$root,'-runTests','-testPlatform','EditMode','-assemblyNames','SourceTCG.Tests','-testResults',$testResults,'-logFile',$editLog)
+$p2 = Start-Process -FilePath $unity -ArgumentList $testArgs -Wait -PassThru -NoNewWindow
+Add-Content $compileLog "EditMode exit $($p2.ExitCode)"
+
+if (Test-Path $editLog) { Get-Content $editLog -Tail 40 | Add-Content $compileLog }
+
+if (-not (Test-Path $testResults)) {
+    Add-Content $compileLog 'FAIL: no editmode-results.xml'
+    exit 1
 }
 
-if ($unity) {
-    & $unity -batchmode -nographics -quit -projectPath $root -executeMethod SourceTCG.Editor.AlphaSceneSetup.BatchSetup -logFile $log 2>&1 | Out-Null
-    if ($LASTEXITCODE -eq 0) {
-        Write-Output "PASS: Unity batch compile/setup - see $log"
-        exit 0
-    }
-    Add-Content $log "Unity batch exited $LASTEXITCODE"
-}
+[xml]$xml = Get-Content $testResults
+$run = $xml.'test-run'
+$summary = "EditMode: $($run.passed)/$($run.total) passed, $($run.failed) failed"
+Add-Content $compileLog $summary
+Get-Content $editLog -Tail 60 | Set-Content $clientLog -Encoding utf8
+Add-Content $clientLog $summary
+Add-Content $clientLog 'Unity EditMode assembly: SourceTCG.Tests (HexResolver H3 plugin, HUD formatters, scene YAML wiring)'
 
-dotnet test tests/ClientLogicTests/ClientLogic.Tests.csproj 2>&1 | Tee-Object -FilePath $log -Append
-if ($LASTEXITCODE -ne 0) { exit 1 }
+if ([int]$run.total -eq 0 -or [int]$run.failed -gt 0 -or $p2.ExitCode -ne 0) { exit 1 }
 
-Add-Content $log "Unity Editor not installed in CI environment."
-Add-Content $log "Compile proof via dotnet test: HexResolver.cs, WorldMapHudFormatter.cs, 14 NUnit tests pass."
-Write-Output 'PASS: dotnet compile proof for HexResolver + HudFormatter (Unity CLI unavailable)'
+Add-Content $compileLog 'Unity compile + EditMode tests PASS'
+Write-Output 'PASS: Unity compile and EditMode tests'
 exit 0

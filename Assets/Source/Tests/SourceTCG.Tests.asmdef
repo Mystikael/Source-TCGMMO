@@ -2,11 +2,11 @@
     "name": "SourceTCG.Tests",
     "rootNamespace": "SourceTCG.Tests",
     "references": [
-        "SourceTCG",
-        "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner"
+        "SourceTCG"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": true,
@@ -14,8 +14,9 @@
         "nunit.framework.dll"
     ],
     "autoReferenced": false,
-    "defineConstraints": [
-        "UNITY_INCLUDE_TESTS"
+    "defineConstraints": [],
+    "optionalUnityReferences": [
+        "TestAssemblies"
     ],
     "versionDefines": [],
     "noEngineReferences": false

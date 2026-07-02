@@ -1,26 +1,42 @@
-# Assign stable 32-char Unity GUIDs to every Assets/Source/**/*.cs.meta
+# Assign cryptographically random Unity GUIDs; persisted in guid-manifest.json for scene consistency.
 $root = Split-Path $PSScriptRoot -Parent
-$guidMap = @{
-    'Assets\Source\Core\GameBootstrap.cs'         = 'f4a8c2e1b3d5476980a1b2c3d4e5f601'
-    'Assets\Source\Core\EconomyConfig.cs'         = '1a2b3c4d5e6f7890abcdef1234567890'
-    'Assets\Source\Core\Haversine.cs'             = '2b3c4d5e6f789012abcdef1234567891'
-    'Assets\Source\Core\HexResolver.cs'           = 'a1b2c3d4e5f6789012345678abcdef01'
-    'Assets\Source\Core\SourceSession.cs'         = '3c4d5e6f7890123abcdef1234567892'
-    'Assets\Source\Data\GameCatalog.cs'           = '4d5e6f78901234abcdef1234567893'
-    'Assets\Source\Debug\GpsSimulator.cs'           = '5e6f789012345abcdef1234567894'
-    'Assets\Source\Networking\SourceApiClient.cs'   = '6f7890123456abcdef1234567895'
-    'Assets\Source\UI\WorldMapController.cs'        = 'a7b3c9d2e4f5487190a2b3c4d5e6f702'
-    'Assets\Source\UI\WorldMapHudFormatter.cs'    = 'b2c3d4e5f6789012345678abcdef0123'
-    'Assets\Source\UI\MapPinVisualizer.cs'        = 'c3d4e5f6789012345678abcdef01234'
-    'Assets\Source\UI\KiProgressBar.cs'           = 'd4e5f6789012345678abcdef0123456'
-    'Assets\Source\UI\InventoryController.cs'     = 'c8d4e0f3a5b6498201b3c4d5e6f70803'
-    'Assets\Source\UI\RuntimeUiFactory.cs'          = '78901234567abcdef1234567896ab'
-    'Assets\Source\UI\OnboardingCopy.cs'            = '89012345678abcdef1234567897ab'
-    'Assets\Source\Editor\AlphaSceneSetup.cs'       = '90123456789abcdef1234567898ab'
-    'Assets\Source\Tests\EconomyTests.cs'           = '0123456789abcdef123456789abcd'
-    'Assets\Source\Tests\HexResolverTests.cs'       = '123456789abcdef0123456789abcde'
-    'Assets\Source\Tests\HudFormatterTests.cs'     = '23456789abcdef0123456789abcdef'
+$manifestPath = Join-Path $PSScriptRoot 'guid-manifest.json'
+
+$scriptPaths = @(
+    'Assets\Source\Core\GameBootstrap.cs',
+    'Assets\Source\Core\EconomyConfig.cs',
+    'Assets\Source\Core\Haversine.cs',
+    'Assets\Source\Core\HexResolver.cs',
+    'Assets\Source\Core\SourceSession.cs',
+    'Assets\Source\Data\GameCatalog.cs',
+    'Assets\Source\Debug\GpsSimulator.cs',
+    'Assets\Source\Networking\SourceApiClient.cs',
+    'Assets\Source\UI\WorldMapController.cs',
+    'Assets\Source\UI\WorldMapHudFormatter.cs',
+    'Assets\Source\UI\MapPinVisualizer.cs',
+    'Assets\Source\UI\KiProgressBar.cs',
+    'Assets\Source\UI\InventoryController.cs',
+    'Assets\Source\UI\RuntimeUiFactory.cs',
+    'Assets\Source\UI\OnboardingCopy.cs',
+    'Assets\Source\Editor\AlphaSceneSetup.cs',
+    'Assets\Source\Tests\EconomyTests.cs',
+    'Assets\Source\Tests\HexResolverTests.cs',
+    'Assets\Source\Tests\HudFormatterTests.cs'
+)
+
+$manifest = @{}
+if (Test-Path $manifestPath) {
+    $manifest = Get-Content $manifestPath -Raw | ConvertFrom-Json -AsHashtable
 }
+
+foreach ($rel in $scriptPaths) {
+    if (-not $manifest.ContainsKey($rel)) {
+        $manifest[$rel] = [guid]::NewGuid().ToString('N')
+    }
+}
+
+$manifest | ConvertTo-Json | Set-Content $manifestPath -Encoding utf8
+
 $template = @'
 fileFormatVersion: 2
 guid: {0}
@@ -34,13 +50,14 @@ MonoImporter:
   assetBundleName: 
   assetBundleVariant: 
 '@
-foreach ($rel in $guidMap.Keys) {
+
+foreach ($rel in $scriptPaths) {
     $metaPath = Join-Path $root ($rel + '.meta')
-    $content = $template -f $guidMap[$rel]
+    $content = $template -f $manifest[$rel]
     Set-Content -Path $metaPath -Value $content.TrimEnd() -Encoding utf8
     Add-Content -Path $metaPath -Value ""
 }
-# Plugin DLL metas
+
 $pluginMeta = @'
 fileFormatVersion: 2
 guid: {0}
@@ -64,18 +81,28 @@ PluginImporter:
   assetBundleName: 
   assetBundleVariant: 
 '@
-Set-Content (Join-Path $root 'Assets\Plugins\H3\pocketken.H3.dll.meta') ($pluginMeta -f 'e5f6789012345678abcdef01234567') -Encoding utf8
-Set-Content (Join-Path $root 'Assets\Plugins\H3\NetTopologySuite.dll.meta') ($pluginMeta -f 'f6789012345678abcdef012345678') -Encoding utf8
+
 if (-not (Test-Path (Join-Path $root 'Assets\Plugins\H3.meta'))) {
-    @'
+    $folderGuid = [guid]::NewGuid().ToString('N')
+    @"
 fileFormatVersion: 2
-guid: 6789012345678abcdef0123456789a
+guid: $folderGuid
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-'@ | Set-Content (Join-Path $root 'Assets\Plugins\H3.meta') -Encoding utf8
+"@ | Set-Content (Join-Path $root 'Assets\Plugins\H3.meta') -Encoding utf8
 }
-Write-Output "Wrote $($guidMap.Count) script .meta files + H3 plugin metas"
+
+$h3Guid = if ($manifest.ContainsKey('Assets\Plugins\H3\pocketken.H3.dll')) { $manifest['Assets\Plugins\H3\pocketken.H3.dll'] } else { [guid]::NewGuid().ToString('N') }
+$ntsGuid = if ($manifest.ContainsKey('Assets\Plugins\H3\NetTopologySuite.dll')) { $manifest['Assets\Plugins\H3\NetTopologySuite.dll'] } else { [guid]::NewGuid().ToString('N') }
+$manifest['Assets\Plugins\H3\pocketken.H3.dll'] = $h3Guid
+$manifest['Assets\Plugins\H3\NetTopologySuite.dll'] = $ntsGuid
+$manifest | ConvertTo-Json | Set-Content $manifestPath -Encoding utf8
+
+Set-Content (Join-Path $root 'Assets\Plugins\H3\pocketken.H3.dll.meta') ($pluginMeta -f $h3Guid) -Encoding utf8
+Set-Content (Join-Path $root 'Assets\Plugins\H3\NetTopologySuite.dll.meta') ($pluginMeta -f $ntsGuid) -Encoding utf8
+
+Write-Output "Wrote $($scriptPaths.Count) script metas with random GUIDs -> $manifestPath"
