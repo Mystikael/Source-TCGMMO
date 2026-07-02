@@ -21,6 +21,8 @@ namespace SourceTCG.UI
         [SerializeField] Button gatherButton;
         [SerializeField] Button kiButton;
         [SerializeField] Button inventoryButton;
+        [SerializeField] MapPinVisualizer pinVisualizer;
+        [SerializeField] KiProgressBar kiProgressBar;
         [SerializeField] float refreshInterval = 3f;
 
         KiSessionResponse activeKi;
@@ -33,7 +35,7 @@ namespace SourceTCG.UI
             if (api == null) api = FindFirstObjectByType<SourceApiClient>();
             if (gps == null) gps = FindFirstObjectByType<GpsSimulator>();
 
-            if (hudText == null)
+            if (hudText == null || pinVisualizer == null || kiProgressBar == null)
                 BuildRuntimeUi();
 
             WireButtons();
@@ -43,8 +45,14 @@ namespace SourceTCG.UI
         {
             RuntimeUiFactory.EnsureEventSystem();
             var canvas = RuntimeUiFactory.EnsureCanvas();
-            hudText = RuntimeUiFactory.CreateText(canvas.transform, "HUD", new Vector2(0, 0), new Vector2(1, 0.55f));
+            hudText = RuntimeUiFactory.CreateText(canvas.transform, "HUD", new Vector2(0, 0.23f), new Vector2(1, 0.55f));
             logText = RuntimeUiFactory.CreateText(canvas.transform, "Log", new Vector2(0, 0.55f), new Vector2(1, 1), 14);
+            var pinPanel = RuntimeUiFactory.CreatePinPanel(canvas.transform);
+            if (pinVisualizer == null) pinVisualizer = gameObject.AddComponent<MapPinVisualizer>();
+            pinVisualizer.BindPanel(pinPanel);
+            RuntimeUiFactory.CreateKiProgressBar(canvas.transform, out var kiRoot, out var kiFill, out var kiLabel);
+            if (kiProgressBar == null) kiProgressBar = gameObject.AddComponent<KiProgressBar>();
+            kiProgressBar.Bind(kiRoot, kiFill, kiLabel);
             extractButton = RuntimeUiFactory.CreateButton(canvas.transform, "Extract", new Vector2(0.02f, 0.02f), new Vector2(140, 36));
             gatherButton = RuntimeUiFactory.CreateButton(canvas.transform, "Gather (250)", new Vector2(0.22f, 0.02f), new Vector2(160, 36));
             kiButton = RuntimeUiFactory.CreateButton(canvas.transform, "Start Ki (100)", new Vector2(0.46f, 0.02f), new Vector2(160, 36));
@@ -113,6 +121,19 @@ namespace SourceTCG.UI
                     activeKi.affinityId));
             }
             if (hudText != null) hudText.text = sb.ToString();
+            pinVisualizer?.Refresh(api.Nearby?.spawns, lat, lng);
+            if (activeKi != null && activeKi.state != "completed")
+            {
+                kiProgressBar?.Refresh(
+                    activeKi.elapsedSeconds,
+                    activeKi.requiredSeconds,
+                    activeKi.state ?? "active",
+                    activeKi.affinityId);
+            }
+            else
+            {
+                kiProgressBar?.Hide();
+            }
             if (extractButton != null)
                 extractButton.interactable = hex != null && hex.canExtract;
         }

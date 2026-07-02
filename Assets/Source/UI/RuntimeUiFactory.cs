@@ -43,6 +43,71 @@ namespace SourceTCG.UI
             return text;
         }
 
+        public static RectTransform CreatePinPanel(Transform parent)
+        {
+            var go = new GameObject("PinPanel");
+            go.transform.SetParent(parent, false);
+            var rect = go.AddComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.02f, 0.14f);
+            rect.anchorMax = new Vector2(0.98f, 0.22f);
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            var layout = go.AddComponent<HorizontalLayoutGroup>();
+            layout.spacing = 8f;
+            layout.childAlignment = TextAnchor.MiddleLeft;
+            layout.childControlWidth = false;
+            layout.childControlHeight = false;
+            return rect;
+        }
+
+        public static void CreateKiProgressBar(Transform parent, out GameObject root, out Image fill, out Text label)
+        {
+            root = new GameObject("KiProgressBar");
+            root.transform.SetParent(parent, false);
+            var rect = root.AddComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.02f, 0.08f);
+            rect.anchorMax = new Vector2(0.98f, 0.13f);
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+
+            var bgGo = new GameObject("Background");
+            bgGo.transform.SetParent(root.transform, false);
+            var bgRect = bgGo.AddComponent<RectTransform>();
+            bgRect.anchorMin = Vector2.zero;
+            bgRect.anchorMax = Vector2.one;
+            bgRect.offsetMin = Vector2.zero;
+            bgRect.offsetMax = Vector2.zero;
+            var bg = bgGo.AddComponent<Image>();
+            bg.color = new Color(0.15f, 0.15f, 0.15f, 0.9f);
+
+            var fillGo = new GameObject("Fill");
+            fillGo.transform.SetParent(root.transform, false);
+            var fillRect = fillGo.AddComponent<RectTransform>();
+            fillRect.anchorMin = Vector2.zero;
+            fillRect.anchorMax = Vector2.one;
+            fillRect.offsetMin = new Vector2(2, 2);
+            fillRect.offsetMax = new Vector2(-2, -2);
+            fill = fillGo.AddComponent<Image>();
+            fill.color = new Color(0.25f, 0.75f, 1f, 1f);
+            fill.type = Image.Type.Filled;
+            fill.fillMethod = Image.FillMethod.Horizontal;
+            fill.fillAmount = 0f;
+
+            var labelGo = new GameObject("Label");
+            labelGo.transform.SetParent(root.transform, false);
+            var labelRect = labelGo.AddComponent<RectTransform>();
+            labelRect.anchorMin = Vector2.zero;
+            labelRect.anchorMax = Vector2.one;
+            labelRect.offsetMin = Vector2.zero;
+            labelRect.offsetMax = Vector2.zero;
+            label = labelGo.AddComponent<Text>();
+            label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            label.fontSize = 12;
+            label.alignment = TextAnchor.MiddleCenter;
+            label.color = Color.white;
+            root.SetActive(false);
+        }
+
         public static Button CreateButton(Transform parent, string label, Vector2 anchor, Vector2 size)
         {
             var go = new GameObject(label);

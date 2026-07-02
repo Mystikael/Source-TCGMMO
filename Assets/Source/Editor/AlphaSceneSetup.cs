@@ -14,7 +14,10 @@ namespace SourceTCG.Editor
     public static class AlphaSceneSetup
     {
         [MenuItem("Source TCG/Setup Alpha Scenes")]
-        public static void SetupAll()
+        public static void SetupAll() => BatchSetup();
+
+        /// <summary>Callable from Unity -batchmode -executeMethod SourceTCG.Editor.AlphaSceneSetup.BatchSetup</summary>
+        public static void BatchSetup()
         {
             CreateBootstrapScene();
             CreateWorldMapScene();
@@ -43,20 +46,30 @@ namespace SourceTCG.Editor
             var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
             EnsureEventSystem();
             var canvas = CreateCanvas();
-            var hud = CreateText(canvas.transform, "HUD", new Vector2(0, 0), new Vector2(1, 0.55f));
+            var hud = CreateText(canvas.transform, "HUD", new Vector2(0, 0.23f), new Vector2(1, 0.55f));
             var log = CreateText(canvas.transform, "Log", new Vector2(0, 0.55f), new Vector2(1, 1));
             log.fontSize = 14;
+            var pinPanel = RuntimeUiFactory.CreatePinPanel(canvas.transform);
+            RuntimeUiFactory.CreateKiProgressBar(canvas.transform, out var kiRoot, out var kiFill, out var kiLabel);
             var extract = CreateButton(canvas.transform, "Extract", new Vector2(0.05f, 0.02f));
             var gather = CreateButton(canvas.transform, "Gather ReSource (250)", new Vector2(0.35f, 0.02f));
             var ki = CreateButton(canvas.transform, "Start Ki (100)", new Vector2(0.7f, 0.02f));
             var inv = CreateButton(canvas.transform, "Inventory", new Vector2(0.05f, 0.1f));
             var map = new GameObject("WorldMapController");
             var ctrl = map.AddComponent<WorldMapController>();
+            var pins = map.AddComponent<MapPinVisualizer>();
+            var progress = map.AddComponent<KiProgressBar>();
+            pins.BindPanel(pinPanel);
+            progress.Bind(kiRoot, kiFill, kiLabel);
             var so = new SerializedObject(ctrl);
             so.FindProperty("hudText").objectReferenceValue = hud;
             so.FindProperty("logText").objectReferenceValue = log;
             so.FindProperty("extractButton").objectReferenceValue = extract;
+            so.FindProperty("gatherButton").objectReferenceValue = gather;
+            so.FindProperty("kiButton").objectReferenceValue = ki;
             so.FindProperty("inventoryButton").objectReferenceValue = inv;
+            so.FindProperty("pinVisualizer").objectReferenceValue = pins;
+            so.FindProperty("kiProgressBar").objectReferenceValue = progress;
             so.ApplyModifiedPropertiesWithoutUndo();
             gather.onClick.AddListener(ctrl.OnGatherNearestResource);
             ki.onClick.AddListener(ctrl.OnStartKi);
