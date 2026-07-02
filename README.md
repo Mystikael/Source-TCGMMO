@@ -1,5 +1,7 @@
 # Source TCGMMO — Location Collection Alpha
 
+**Repository:** [github.com/Mystikael/Source-TCGMMO](https://github.com/Mystikael/Source-TCGMMO)
+
 Pokemon Go-style location collection for the Source MMOTCG universe. Walk the US mainland (pilot: CA, TX, NY), earn **Source Points**, gather **ReSources**, and extract **Ki Affinities**.
 
 ## Three-Loop Economy
