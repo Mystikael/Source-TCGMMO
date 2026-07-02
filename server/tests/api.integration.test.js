@@ -145,6 +145,68 @@ describe('API integration', () => {
     assert.equal(ping.body.kiAwarded, 1);
   });
 
+  it('ki ping pauses out of range and resumes in range without extra elapsed', async () => {
+    const auth = await request(port, 'POST', '/auth/guest');
+    const token = auth.body.token;
+    for (let i = 0; i < 3; i++) {
+      await request(port, 'POST', '/source/extract', SF, token);
+    }
+    const nearby = await request(port, 'GET', `/spawns/nearby?lat=${SF.lat}&lng=${SF.lng}`, null, token);
+    const ki = nearby.body.spawns.find((s) => s.spawnType === 'ki');
+    assert.ok(ki);
+    const start = await request(
+      port,
+      'POST',
+      '/ki/sessions',
+      { spawnId: ki.id, lat: ki.lat, lng: ki.lng, targetKiTier: 1 },
+      token
+    );
+    assert.equal(start.status, 200);
+    const outOfRange = { lat: ki.lat + 1.0, lng: ki.lng + 1.0 };
+    await new Promise((r) => setTimeout(r, 600));
+    const paused = await request(
+      port,
+      'POST',
+      `/ki/sessions/${start.body.sessionId}/ping`,
+      outOfRange,
+      token
+    );
+    assert.equal(paused.status, 200);
+    assert.equal(paused.body.state, 'paused');
+    assert.equal(paused.body.inRange, false);
+    const elapsedAtPause = paused.body.elapsedSeconds;
+    await new Promise((r) => setTimeout(r, 1200));
+    const stillPaused = await request(
+      port,
+      'POST',
+      `/ki/sessions/${start.body.sessionId}/ping`,
+      outOfRange,
+      token
+    );
+    assert.equal(stillPaused.body.state, 'paused');
+    assert.equal(stillPaused.body.elapsedSeconds, elapsedAtPause);
+    const resumed = await request(
+      port,
+      'POST',
+      `/ki/sessions/${start.body.sessionId}/ping`,
+      { lat: ki.lat, lng: ki.lng },
+      token
+    );
+    assert.equal(resumed.status, 200);
+    assert.equal(resumed.body.state, 'active');
+    assert.equal(resumed.body.inRange, true);
+    await new Promise((r) => setTimeout(r, 1100));
+    const completed = await request(
+      port,
+      'POST',
+      `/ki/sessions/${start.body.sessionId}/ping`,
+      { lat: ki.lat, lng: ki.lng },
+      token
+    );
+    assert.equal(completed.body.state, 'completed');
+    assert.equal(completed.body.kiAwarded, 1);
+  });
+
   it('ki start blocked without 100 points', async () => {
     const auth = await request(port, 'POST', '/auth/guest');
     const token = auth.body.token;

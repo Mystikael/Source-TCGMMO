@@ -7,8 +7,11 @@
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "pocketken.H3.dll",
+        "NetTopologySuite.dll"
+    ],
     "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [],

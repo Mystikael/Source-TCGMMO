@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using System.Text;
 using SourceTCG.Core;
 using SourceTCG.Data;
@@ -79,20 +80,37 @@ namespace SourceTCG.UI
         {
             var w = api.Wallet;
             var hex = api.CurrentHex;
+            var clientHex = HexResolver.ResolveHex(lat, lng);
             var sb = new StringBuilder();
             sb.AppendLine("Source TCGMMO — World Map");
             sb.AppendLine($"GPS: {lat:F4}, {lng:F4}");
-            sb.AppendLine($"Hex: {hex?.h3Index ?? "?"} ({hex?.zoneClass})");
+            sb.AppendLine($"Hex (client): {clientHex}");
+            sb.AppendLine($"Hex (server): {hex?.h3Index ?? "?"} ({hex?.zoneClass})");
             sb.AppendLine($"Source Points: {w?.sourcePoints ?? 0}");
             sb.AppendLine($"Extracts left: {w?.extractionsRemaining ?? 0}/{EconomyConfig.DailyExtractLimit}");
-            if (api.Nearby?.spawns != null)
+            if (api.Nearby?.spawns != null && api.Nearby.spawns.Length > 0)
             {
-                sb.AppendLine("Nearby:");
+                var pins = new List<MapPin>(api.Nearby.spawns.Length);
                 foreach (var s in api.Nearby.spawns)
                 {
-                    var inRange = Haversine.IsWithinRadiusMeters(lat, lng, s.lat, s.lng, EconomyConfig.CollectionRadiusM);
-                    sb.AppendLine($"  [{s.spawnType}] {s.subtypeId} {(inRange ? "IN RANGE" : $"{s.distanceM:F0}m")}");
+                    pins.Add(new MapPin
+                    {
+                        SpawnType = s.spawnType,
+                        SubtypeId = s.subtypeId,
+                        Lat = s.lat,
+                        Lng = s.lng,
+                        DistanceM = s.distanceM,
+                    });
                 }
+                sb.AppendLine(WorldMapHudFormatter.FormatNearbyPins(pins, lat, lng));
+            }
+            if (activeKi != null && activeKi.state != "completed")
+            {
+                sb.AppendLine(WorldMapHudFormatter.FormatKiDwellProgress(
+                    activeKi.elapsedSeconds,
+                    activeKi.requiredSeconds,
+                    activeKi.state ?? "active",
+                    activeKi.affinityId));
             }
             if (hudText != null) hudText.text = sb.ToString();
             if (extractButton != null)
@@ -178,6 +196,8 @@ namespace SourceTCG.UI
                 yield return api.PingKi(sessionId, gps.Latitude, gps.Longitude, r => ping = r);
                 if (ping == null) break;
                 activeKi = ping;
+                activeKi.affinityId = affinityId;
+                RefreshHud(gps.Latitude, gps.Longitude);
                 if (ping.state == "completed")
                 {
                     var name = GameCatalog.GetAffinityName(affinityId);

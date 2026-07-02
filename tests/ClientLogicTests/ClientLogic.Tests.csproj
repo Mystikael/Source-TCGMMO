@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>SourceTCG.Tests</RootNamespace>
+    <DefineConstants>UNITY_INCLUDE_TESTS</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\Assets\Source\Core\EconomyConfig.cs" Link="EconomyConfig.cs" />
+    <Compile Include="..\..\Assets\Source\Core\Haversine.cs" Link="Haversine.cs" />
+    <Compile Include="..\..\Assets\Source\Core\HexResolver.cs" Link="HexResolver.cs" />
+    <Compile Include="..\..\Assets\Source\Data\GameCatalog.cs" Link="GameCatalog.cs" />
+    <Compile Include="..\..\Assets\Source\UI\WorldMapHudFormatter.cs" Link="WorldMapHudFormatter.cs" />
+    <Compile Include="..\..\Assets\Source\Tests\EconomyTests.cs" Link="EconomyTests.cs" />
+    <Compile Include="..\..\Assets\Source\Tests\HexResolverTests.cs" Link="HexResolverTests.cs" />
+    <Compile Include="..\..\Assets\Source\Tests\HudFormatterTests.cs" Link="HudFormatterTests.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="NUnit" Version="3.14.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+    <PackageReference Include="pocketken.H3" Version="4.0.0" />
+  </ItemGroup>
+</Project>

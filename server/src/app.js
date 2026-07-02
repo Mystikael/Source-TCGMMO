@@ -220,9 +220,10 @@ export function createApp(db, options = {}) {
     let elapsed = session.elapsed_seconds;
     let state = session.state;
     const inRange = isWithinRadiusMeters(lat, lng, spawn.lat, spawn.lng, ECONOMY.COLLECTION_RADIUS_M);
-    if (inRange && state === 'active') {
-      elapsed += deltaSec;
-    } else if (!inRange) {
+    if (inRange) {
+      if (state === 'paused') state = 'active';
+      if (state === 'active') elapsed += deltaSec;
+    } else if (state === 'active' || state === 'paused') {
       state = 'paused';
     }
     if (elapsed >= session.required_seconds) {
