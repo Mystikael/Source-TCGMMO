@@ -22,3 +22,7 @@
 server/node_modules/
 server/data/*.db
 server/data/*.db-*
+
+# dotnet test project build output
+tests/ClientLogicTests/bin/
+tests/ClientLogicTests/obj/
