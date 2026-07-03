@@ -2,6 +2,7 @@
     "name": "SourceTCG",
     "rootNamespace": "SourceTCG",
     "references": [
+        "Unity.InputSystem",
         "Unity.TextMeshPro"
     ],
     "includePlatforms": [],

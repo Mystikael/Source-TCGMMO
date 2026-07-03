@@ -166,6 +166,7 @@ namespace SourceTCG.UI
             text.alignment = TextAnchor.MiddleCenter;
             text.color = Color.white;
             text.fontSize = 15;
+            text.raycastTarget = false;
             return btn;
         }
 

@@ -12,6 +12,9 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem.UI;
+#endif
 
 namespace SourceTCG.Editor
 {
@@ -203,12 +206,25 @@ namespace SourceTCG.Editor
 
         static void EnsureEventSystem()
         {
-            if (UnityEngine.Object.FindFirstObjectByType<EventSystem>() == null)
+            var es = UnityEngine.Object.FindFirstObjectByType<EventSystem>();
+            if (es == null)
             {
-                var es = new GameObject("EventSystem");
-                es.AddComponent<EventSystem>();
-                es.AddComponent<StandaloneInputModule>();
+                var go = new GameObject("EventSystem");
+                es = go.AddComponent<EventSystem>();
             }
+
+#if ENABLE_INPUT_SYSTEM
+            if (es.GetComponent<InputSystemUIInputModule>() == null)
+            {
+                var legacy = es.GetComponent<StandaloneInputModule>();
+                if (legacy != null)
+                    UnityEngine.Object.DestroyImmediate(legacy);
+                es.gameObject.AddComponent<InputSystemUIInputModule>();
+            }
+#else
+            if (es.GetComponent<StandaloneInputModule>() == null)
+                es.gameObject.AddComponent<StandaloneInputModule>();
+#endif
         }
 
         static GameObject CreateCanvas()
