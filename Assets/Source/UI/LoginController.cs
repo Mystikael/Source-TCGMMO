@@ -33,6 +33,21 @@ namespace SourceTCG.UI
 
         IEnumerator Boot()
         {
+            yield return WaitForApi();
+            if (api == null)
+            {
+                SetStatus("API client missing. Reimport scripts and open Bootstrap scene.");
+                yield break;
+            }
+
+            var serverOk = false;
+            yield return api.CheckServer(ok => serverOk = ok);
+            if (!serverOk)
+            {
+                SetStatus($"Server offline at {api.BaseUrl}. Run: cd server && npm start");
+                yield break;
+            }
+
             var savedToken = PlayerPrefs.GetString(TokenKey, "");
             if (!string.IsNullOrEmpty(savedToken))
             {
@@ -46,12 +61,26 @@ namespace SourceTCG.UI
                     yield break;
                 }
                 api.SetToken(null);
+                SetStatus("Session expired. Sign up or log in again.");
             }
+            else
+            {
+                var savedEmail = PlayerPrefs.GetString(EmailKey, "");
+                if (!string.IsNullOrEmpty(savedEmail) && emailField != null)
+                    emailField.text = savedEmail;
+                SetStatus("Sign up or log in to play.");
+            }
+        }
 
-            var savedEmail = PlayerPrefs.GetString(EmailKey, "");
-            if (!string.IsNullOrEmpty(savedEmail) && emailField != null)
-                emailField.text = savedEmail;
-            SetStatus("Sign up or log in to play.");
+        IEnumerator WaitForApi()
+        {
+            const int maxFrames = 120;
+            for (var i = 0; i < maxFrames && api == null; i++)
+            {
+                if (SourceSession.Instance != null) api = SourceSession.Instance.Api;
+                if (api == null) api = FindFirstObjectByType<SourceApiClient>();
+                if (api == null) yield return null;
+            }
         }
 
         void BuildLoginUi()

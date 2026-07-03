@@ -109,6 +109,16 @@ namespace SourceTCG.Networking
 
         public void SetBaseUrl(string url) => baseUrl = url;
 
+        public string BaseUrl => baseUrl;
+
+        public IEnumerator CheckServer(Action<bool> done, int timeoutSeconds = 3)
+        {
+            using var req = UnityWebRequest.Get(baseUrl);
+            req.timeout = timeoutSeconds;
+            yield return req.SendWebRequest();
+            done(req.result != UnityWebRequest.Result.ConnectionError);
+        }
+
         public IEnumerator GuestAuth(Action<bool> done)
         {
             yield return PostJson("/auth/guest", null, null, (ok, json) =>

@@ -146,7 +146,7 @@ namespace SourceTCG.Editor
             var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
             EnsureEventSystem();
             var bootstrap = new GameObject("Bootstrap");
-            bootstrap.AddComponent<LoginController>();
+            bootstrap.AddComponent<GameBootstrap>();
             EditorSceneManager.SaveScene(scene, "Assets/Scenes/Bootstrap.unity");
         }
 
