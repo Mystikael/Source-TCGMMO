@@ -1,9 +1,7 @@
+using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-#if ENABLE_INPUT_SYSTEM
-using UnityEngine.InputSystem.UI;
-#endif
 
 namespace SourceTCG.UI
 {
@@ -23,19 +21,23 @@ namespace SourceTCG.UI
 
         static void EnsureInputModule(GameObject eventSystemGo)
         {
-#if ENABLE_INPUT_SYSTEM
-            if (eventSystemGo.GetComponent<InputSystemUIInputModule>() != null)
+            var inputSystemModule = Type.GetType(
+                "UnityEngine.InputSystem.UI.InputSystemUIInputModule, Unity.InputSystem");
+            if (inputSystemModule != null)
+            {
+                if (eventSystemGo.GetComponent(inputSystemModule) == null)
+                {
+                    var legacy = eventSystemGo.GetComponent<StandaloneInputModule>();
+                    if (legacy != null)
+                        Object.Destroy(legacy);
+                    eventSystemGo.AddComponent(inputSystemModule);
+                }
+
                 return;
+            }
 
-            var legacy = eventSystemGo.GetComponent<StandaloneInputModule>();
-            if (legacy != null)
-                Object.Destroy(legacy);
-
-            eventSystemGo.AddComponent<InputSystemUIInputModule>();
-#else
             if (eventSystemGo.GetComponent<StandaloneInputModule>() == null)
                 eventSystemGo.AddComponent<StandaloneInputModule>();
-#endif
         }
 
         public static Canvas EnsureCanvas()
