@@ -20,23 +20,55 @@ namespace SourceTCG.UI
 
         static void EnsureInputModule(GameObject eventSystemGo)
         {
-            var inputSystemModule = System.Type.GetType(
-                "UnityEngine.InputSystem.UI.InputSystemUIInputModule, Unity.InputSystem");
-            if (inputSystemModule != null)
+#if ENABLE_LEGACY_INPUT_MANAGER
+            RemoveInputSystemUiModule(eventSystemGo);
+            if (eventSystemGo.GetComponent<StandaloneInputModule>() == null)
+                eventSystemGo.AddComponent<StandaloneInputModule>();
+#else
+            var inputSystemModule = FindInputSystemUiModuleType();
+            if (inputSystemModule == null)
             {
-                if (eventSystemGo.GetComponent(inputSystemModule) == null)
-                {
-                    var legacy = eventSystemGo.GetComponent<StandaloneInputModule>();
-                    if (legacy != null)
-                        UnityEngine.Object.Destroy(legacy);
-                    eventSystemGo.AddComponent(inputSystemModule);
-                }
-
+                if (eventSystemGo.GetComponent<StandaloneInputModule>() == null)
+                    eventSystemGo.AddComponent<StandaloneInputModule>();
                 return;
             }
 
-            if (eventSystemGo.GetComponent<StandaloneInputModule>() == null)
-                eventSystemGo.AddComponent<StandaloneInputModule>();
+            if (eventSystemGo.GetComponent(inputSystemModule) == null)
+            {
+                var legacy = eventSystemGo.GetComponent<StandaloneInputModule>();
+                if (legacy != null)
+                    UnityEngine.Object.Destroy(legacy);
+                eventSystemGo.AddComponent(inputSystemModule);
+            }
+#endif
+        }
+
+        static void RemoveInputSystemUiModule(GameObject eventSystemGo)
+        {
+            var inputSystemModule = FindInputSystemUiModuleType();
+            if (inputSystemModule == null)
+                return;
+
+            var existing = eventSystemGo.GetComponent(inputSystemModule);
+            if (existing != null)
+                UnityEngine.Object.Destroy(existing);
+        }
+
+        static System.Type FindInputSystemUiModuleType()
+        {
+            const string typeName = "UnityEngine.InputSystem.UI.InputSystemUIInputModule";
+            var type = System.Type.GetType(typeName + ", Unity.InputSystem");
+            if (type != null)
+                return type;
+
+            foreach (var assembly in System.AppDomain.CurrentDomain.GetAssemblies())
+            {
+                type = assembly.GetType(typeName);
+                if (type != null)
+                    return type;
+            }
+
+            return null;
         }
 
         public static Canvas EnsureCanvas()
@@ -139,9 +171,13 @@ namespace SourceTCG.UI
             go.transform.SetParent(parent, false);
             var rect = go.AddComponent<RectTransform>();
             rect.sizeDelta = new Vector2(320, 36);
+            var layout = go.AddComponent<LayoutElement>();
+            layout.preferredHeight = 36f;
+            layout.minHeight = 36f;
 
             var bg = go.AddComponent<Image>();
             bg.color = new Color(0.12f, 0.14f, 0.2f, 0.95f);
+            bg.raycastTarget = true;
 
             var textGo = new GameObject("Text");
             textGo.transform.SetParent(go.transform, false);
@@ -155,6 +191,7 @@ namespace SourceTCG.UI
             text.fontSize = 16;
             text.color = Color.white;
             text.supportRichText = false;
+            text.raycastTarget = false;
 
             var placeholderGo = new GameObject("Placeholder");
             placeholderGo.transform.SetParent(go.transform, false);
@@ -168,8 +205,10 @@ namespace SourceTCG.UI
             phText.fontSize = 16;
             phText.color = new Color(1f, 1f, 1f, 0.45f);
             phText.text = placeholder;
+            phText.raycastTarget = false;
 
             var field = go.AddComponent<InputField>();
+            field.targetGraphic = bg;
             field.textComponent = text;
             field.placeholder = phText;
             field.lineType = InputField.LineType.SingleLine;

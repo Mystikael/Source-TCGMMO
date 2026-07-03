@@ -70,6 +70,15 @@ namespace SourceTCG.UI
                     emailField.text = savedEmail;
                 SetStatus("Sign up or log in to play.");
             }
+
+            FocusEmailField();
+        }
+
+        void FocusEmailField()
+        {
+            if (emailField == null) return;
+            emailField.Select();
+            emailField.ActivateInputField();
         }
 
         IEnumerator WaitForApi()
