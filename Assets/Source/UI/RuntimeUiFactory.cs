@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -9,7 +8,7 @@ namespace SourceTCG.UI
     {
         public static void EnsureEventSystem()
         {
-            var es = Object.FindFirstObjectByType<EventSystem>();
+            var es = UnityEngine.Object.FindFirstObjectByType<EventSystem>();
             if (es == null)
             {
                 var go = new GameObject("EventSystem");
@@ -21,7 +20,7 @@ namespace SourceTCG.UI
 
         static void EnsureInputModule(GameObject eventSystemGo)
         {
-            var inputSystemModule = Type.GetType(
+            var inputSystemModule = System.Type.GetType(
                 "UnityEngine.InputSystem.UI.InputSystemUIInputModule, Unity.InputSystem");
             if (inputSystemModule != null)
             {
@@ -29,7 +28,7 @@ namespace SourceTCG.UI
                 {
                     var legacy = eventSystemGo.GetComponent<StandaloneInputModule>();
                     if (legacy != null)
-                        Object.Destroy(legacy);
+                        UnityEngine.Object.Destroy(legacy);
                     eventSystemGo.AddComponent(inputSystemModule);
                 }
 
@@ -42,7 +41,7 @@ namespace SourceTCG.UI
 
         public static Canvas EnsureCanvas()
         {
-            var existing = Object.FindFirstObjectByType<Canvas>();
+            var existing = UnityEngine.Object.FindFirstObjectByType<Canvas>();
             if (existing != null) return existing;
             var go = new GameObject("Canvas");
             var canvas = go.AddComponent<Canvas>();
